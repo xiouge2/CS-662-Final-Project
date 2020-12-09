@@ -142,13 +142,3 @@ if __name__ == '__main__':
     parser.add_argument("-i",  help="inputfile: the name/path of the test file that has to be read one text per line")
     args = parser.parse_args()
     read_data(args)
-        # return train_tensorDataset, dev_tensorDataset, test_tensorDataset
-    # for [head_and_tail, path, predict] in train_closed_paths_rules:
-    #     h_t_id = list(map(entity2id.get, head_and_tail))
-    #     path_r_id = list(map(relation2id.get, path))
-    #     predict_r_id = relation2id[predict]
-    #     all_h_t.append(h_t_id)
-    #     .append()
-    #     print(h_t_id, path_r_id, predict_r_id)
-    # with open('closed_path', "wb") as file:
-    #   pickle.dump(closed_paths, file)
