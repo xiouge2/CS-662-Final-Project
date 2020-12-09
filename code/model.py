@@ -20,7 +20,6 @@ class LSTM(nn.Module):
                  lstm_units, hidden_dim, num_classes, lstm_layers,
                  bidirectional, dropout, batch_size):
         super().__init__()
-        # self.embedding = nn.Embedding(vocab_size, embedding_dim, padding_idx = pad_index)
         self.entity_embedding = nn.Embedding(num_entity+1, embedding_dim, padding_idx=num_entity)
         self.relation_embedding = nn.Embedding(num_relation+1, embedding_dim, padding_idx=num_relation)
         self.lstm = nn.LSTM(embedding_dim,
@@ -51,19 +50,12 @@ class LSTM(nn.Module):
         tail_batch = self.entity_embedding(h_t_id[:, 1])
         path_relation_batch = self.relation_embedding(path_r_id)
         head_batch = head_batch.view(head_batch.shape[0], 1, head_batch.shape[1])
-        # print(head_batch.shape)
         tail_batch = tail_batch.view(tail_batch.shape[0], 1, tail_batch.shape[1])
-        # print(tail_batch.shape)
         path_length = 2 + path_relation_batch.shape[1]
         padding = torch.zeros(head_batch.shape[0], 7-path_length, head_batch.shape[2]).to(device)
-        # print(path_relation_batch.shape)
-        # print(padding.shape)
         padded_embed_input = torch.cat((head_batch, path_relation_batch, tail_batch, padding), dim=1)
-        # print(padded_embed_input.shape)
-        # print(embedding_input.shape)
         text_lengths = torch.ones(batch_size) * (path_length)
         packed_embedded = pack_padded_sequence(padded_embed_input, text_lengths, batch_first=True)
-        # print(packed_embedded[0].shape)
         output, (h_n, c_n) = self.lstm(packed_embedded, (h_0, c_0))
         output_unpacked, output_lengths = pad_packed_sequence(output, batch_first=True)
         out = output_unpacked[:, -1, :]
@@ -72,8 +64,6 @@ class LSTM(nn.Module):
         drop = self.dropout(dense1)
         preds = self.fc2(drop)
         return preds
-
-# def train(model, optimizer, loss_function, train_loader, train_size):
 
 def evaluate(data_path, mode, device):
     measure = Measure()
@@ -98,7 +88,6 @@ if __name__ == '__main__':
         dev = "cuda:0" 
     else:  
         dev = "cpu"  
-    print(dev)
     device = torch.device(dev)  
     parser = argparse.ArgumentParser(description="Get input data")
     parser.add_argument("-i",  help="inputfile: the name/path of the test file that has to be read one text per line")
@@ -128,8 +117,7 @@ if __name__ == '__main__':
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay=1e-5)
     loss_function = nn.CrossEntropyLoss()
     model.train()
-    mode = 'dev'
-    # for mode in ['dev']:#, 'dev', 'test']:
+    mode = 'train'
     for epoch in range(num_of_epoch):
         epoch_loss = 0.0
         epoch_acc = 0.0
@@ -152,35 +140,9 @@ if __name__ == '__main__':
                 loss.backward()
                 optimizer.step()
                 epoch_loss += loss.item()
-                # epoch_acc += torch.sum(preds == labels).item()
         epoch_loss /= train_size
         print('epoch_'+str(epoch)+': '+str(epoch_loss))
-            # print(epoch_acc)
-        # epoch_acc /= train_size
         evaluate(data_path, 'dev', device)
     evaluate(data_path, 'test', device)
     model_file = os.path.join(cwd, dataset+'_model.pt')
     torch.save(model.state_dict(), model_file)
-            # return epoch_loss, epoch_acc 
-    # train_tensorDataset, dev_tensorDataset, test_tensorDataset = read_data(args)
-    # for epoch in range(num_of_epoch):
-    #     for length, tensor_Dataset in train_tensorDataset.items():
-    #         data_loader = DataLoader(tensor_Dataset, batch_size=batch_size, shuffle=True)
-    #         # model.train()
-    #         epoch_loss = 0.0
-    #         epoch_acc = 0.0
-    #         for i, (h_t_id, path_r_id, labels) in enumerate(data_loader):
-    #             print(h_t_id, path_r_id, labels)
-    #             sys.exit()
-                # print(features.shape)
-            #     optimizer.zero_grad()
-            #     outputs = model.forward(word_idx, pos_idx, arc_idx)
-            #     loss = loss_function(outputs, labels)
-            #     _, preds = torch.max(outputs.data, 1)
-            #     loss.backward()
-            #     optimizer.step()
-            #     epoch_loss += loss.item()
-            #     epoch_acc += torch.sum(preds == labels).item()
-            # epoch_loss /= train_size
-            # epoch_acc /= train_size
-            # return epoch_loss, epoch_acc 
